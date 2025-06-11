@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import axios from '../service/AxiosInstance'
 import { toast } from 'react-toastify';
+import { Link, useNavigate } from 'react-router-dom';
+
 const SignUp = () => {
+  const navigate = useNavigate()
   const [userName, setUserName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+
+
   const handleFormSubmit = async (e)=>{
     e.preventDefault()
     console.log("form submitted")
@@ -12,6 +17,7 @@ const SignUp = () => {
     .then((res)=>{
       console.log(res.data)
       toast.success("Account created successfully!")
+      navigate('/auth/login')
     })
     .catch((err)=>{
       console.log(err.response.data.message)
@@ -93,12 +99,12 @@ const SignUp = () => {
         {/* Already have an account */}
         <p className="text-sm text-center text-white mt-6">
           Already have an account?{' '}
-          <a
-            href="/login"
+          <Link
+            to="/auth/login"
             className="text-violet-300 hover:text-violet-200 underline transition"
           >
             Log in here
-          </a>
+          </Link>
         </p>
       </div>
     </div>

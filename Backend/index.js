@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser'
 import authRouter from './src/routes/auth.routes.js'
 import userRouter from './src/routes/user.routes.js'
 import cors from 'cors'
+import { geminiResponse } from './src/service/GeminiRespose.js'
 
 const corsOptions = {
   origin: "http://localhost:5173",

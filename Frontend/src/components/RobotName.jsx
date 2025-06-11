@@ -1,13 +1,18 @@
 import React, { useState } from 'react'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 
-const RobotName = ({setNameMain,nameMain}) => {
+const RobotName = () => {
+  const navigate = useNavigate()
+  const {setNameMain,nameMain} = useOutletContext()
+
   const [name, setName] = useState('')
 
   const handleSubmit = (e) => {
     e.preventDefault()
     console.log('Virtual Assistant Name:', name)
     setNameMain(name)
-    // You can also trigger a toast or send to backend here
+    navigate('/dashboard')
+    
   }
 
   return (

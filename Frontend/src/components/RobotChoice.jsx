@@ -7,6 +7,7 @@ import robot4 from "../assets/robot/robot4.jpg";
 import robot5 from "../assets/robot/robot7.jpg";
 import robot6 from "../assets/robot/robot8.jpg";
 import { FiUpload } from "react-icons/fi";
+import { useNavigate, useOutletContext } from "react-router-dom";
 
 const robotDetails = [
   { robotName: robot1, robotId: 1 },
@@ -17,7 +18,10 @@ const robotDetails = [
   { robotName: robot6, robotId: 6 },
 ];
 
-const RobotChoice = ({ setFileData }) => {
+const RobotChoice = () => {
+  const navigate = useNavigate()
+  const {setFileData} = useOutletContext()
+  
   const fileInputRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedRobotId, setSelectedRobotId] = useState(null);
@@ -38,6 +42,7 @@ const RobotChoice = ({ setFileData }) => {
   const handleFormSubmit = (e) => {
     e.preventDefault();
     console.log("form submitted successfully");
+    navigate('/customization/name')
   };
 
   return (

@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { toast } from 'react-toastify';
 import axios from '../service/AxiosInstance';
+import { Link, useNavigate } from 'react-router-dom';
+import { useUserContext } from '../context/UserContext';
 const Login = () => {
+  const navigate = useNavigate()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
 
+  const { isHaveAssistant,fetchUser } = useUserContext();
 
   const handleFormSubmit = async(e)=>{
     e.preventDefault()
@@ -14,6 +18,11 @@ const Login = () => {
     .then((res)=>{
       console.log(res.data)
       toast.success("Login successful!")
+      fetchUser()
+      if(isHaveAssistant){
+        toast.info("You already have a virtual assistant, redirecting to dashboard page.")
+        navigate("/dashboard")
+      }else navigate("/customization/dummy")
     })
     .catch((err)=>{
       console.log(err.response.data.message)
@@ -77,12 +86,12 @@ const Login = () => {
         {/* Already have an account */}
         <p className="text-sm text-center text-white mt-6">
           Does not have any account?{' '}
-          <a
-            href="/login"
+          <Link
+            to="/auth/signup"
             className="text-violet-300 hover:text-violet-200 underline transition"
           >
             Sign Up here
-          </a>
+          </Link>
         </p>
       </div>
     </div>
