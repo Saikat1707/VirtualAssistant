@@ -1,6 +1,24 @@
-import React from 'react';
-
+import React, { useState } from 'react';
+import axios from '../service/AxiosInstance'
+import { toast } from 'react-toastify';
 const SignUp = () => {
+  const [userName, setUserName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const handleFormSubmit = async (e)=>{
+    e.preventDefault()
+    console.log("form submitted")
+    await axios.post('/auth/signup',{userName,email,password})
+    .then((res)=>{
+      console.log(res.data)
+      toast.success("Account created successfully!")
+    })
+    .catch((err)=>{
+      console.log(err.response.data.message)
+      toast.error(err.response.data.message)
+    })
+  }
+
   return (
     <div className="flex justify-center items-center p-10 font-poppins bg-transparent">
       <div className="w-full max-w-md bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl px-10 py-12">
@@ -8,7 +26,7 @@ const SignUp = () => {
           Create Your Account
         </h2>
 
-        <form className="space-y-6">
+        <form className="space-y-6" onSubmit={handleFormSubmit}>
           {/* Name */}
           <div>
             <label htmlFor="name" className="block text-sm font-medium text-white mb-2">
@@ -19,6 +37,8 @@ const SignUp = () => {
                 type="text"
                 id="name"
                 placeholder="John Doe"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
                 className="w-full px-5 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:bg-white/30 transition-all duration-300 shadow-inner"
                 required
               />
@@ -35,6 +55,8 @@ const SignUp = () => {
                 type="email"
                 id="email"
                 placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-5 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:bg-white/30 transition-all duration-300 shadow-inner"
                 required
               />
@@ -51,6 +73,8 @@ const SignUp = () => {
                 type="password"
                 id="password"
                 placeholder="********"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-5 py-3 rounded-xl bg-white/20 text-white placeholder-white/60 border border-white/30 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:bg-white/30 transition-all duration-300 shadow-inner"
                 required
               />

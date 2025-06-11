@@ -5,9 +5,21 @@ import connectDB from './src/service/DBconnection.js'
 import cookieParser from 'cookie-parser'
 import authRouter from './src/routes/auth.routes.js'
 import userRouter from './src/routes/user.routes.js'
+import cors from 'cors'
+
+const corsOptions = {
+  origin: "http://localhost:5173",
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH','OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}
 
 const app = express()
 app.use(cookieParser())
+
+app.use(cors(corsOptions));
+// app.options('/*', cors(corsOptions)); 
+
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))

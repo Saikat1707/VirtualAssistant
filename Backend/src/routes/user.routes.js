@@ -5,6 +5,6 @@ import upload from '../middlewares/multer.js'
 const router = express.Router()
 
 router.get('/current',isAuthenticated,getCurrentUser)
-router.post('/update',isAuthenticated,upload.single('assistantImage'),updateUser)
+router.patch('/update',isAuthenticated,upload.single('assistantImage'),updateUser)
 
 export default router
