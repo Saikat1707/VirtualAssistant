@@ -2,7 +2,7 @@ import { json } from "express";
 import { updateDao } from "../DAO/updateDao.js";
 import { geminiResponse } from "../service/GeminiRespose.js";
 import moment from "moment/moment.js";
-
+import User from "../models/user.models.js";
 
 export const getCurrentUser = (req,res)=>{
     const user = req.user
@@ -59,8 +59,12 @@ export const askToAssistant = async (req, res) => {
     } catch (err) {
       return res.status(500).json({ message: "Invalid response format from assistant" });
     }
-
+    
     const type = GeminiResponse.type || "unknown";
+    const userInput = GeminiResponse.userInput;
+    await User.findByIdAndUpdate(user._id, {
+      $push: { searchHistory: userInput }
+    });
 
     switch (type) {
       case "get_date":

@@ -11,9 +11,10 @@ import Login from './components/Login'
 import RobotChoice from './components/RobotChoice'
 import RobotName from './components/RobotName'
 import DashBoard from './pages/DashBoard'
+import TestMic from './components/TestMic'
 const App = () => {
   return (
-    <div className="flex items-center justify-center lg:h-screen md:h-auto">
+    <div className="flex items-center justify-center ">
       <ToastContainer
         position="top-center"
         autoClose={3000}
@@ -37,7 +38,7 @@ const App = () => {
           <Route path='dummy' element={<RobotChoice/>}/>
           <Route path='name' element={<RobotName/>}/>
         </Route>
-        <Route path='/dashboard' element={<DashBoard/>}/>
+        <Route path='/' element={<DashBoard/>}/>
       </Routes>
     </div>
 

@@ -20,14 +20,24 @@ export const UserProvider = ({ children }) => {
         console.log("Error in fetching user data");
         toast.error(err?.response?.data?.message || "Failed to fetch user data");
       }
-    };
+  };
 
   useEffect(() => {
     fetchUser();
   }, []);
 
+  const speak = (text) => {
+    const text_speak = new SpeechSynthesisUtterance(text);
+    text_speak.volume = 3;
+    text_speak.rate = 1;
+    text_speak.pitch = 0;
+    window.speechSynthesis.speak(text_speak);
+  };
+
+  
+
   return (
-    <UserContext.Provider value={{ user, isLogin, setIsLogin ,isHaveAssistant,setIsHaveAssistant,fetchUser}}>
+    <UserContext.Provider value={{ user, isLogin, setIsLogin ,isHaveAssistant,setIsHaveAssistant,fetchUser,speak}}>
       {children}
     </UserContext.Provider>
   );

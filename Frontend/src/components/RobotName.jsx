@@ -11,7 +11,7 @@ const RobotName = () => {
     e.preventDefault()
     console.log('Virtual Assistant Name:', name)
     setNameMain(name)
-    navigate('/dashboard')
+    navigate('/')
     
   }
 

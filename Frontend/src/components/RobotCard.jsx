@@ -1,32 +1,27 @@
-import React from 'react'
+import React from 'react';
 
-const RobotCard = ({ robotID,robotName, setFileData,setSelectedRobotId,isSelected }) => {
-  const borderStyle = isSelected ? 'border-white' : 'border-transparent'
-  const handleRobotChoose = async () => {
-    try {
-      const response = await fetch(robotName)
-      const blob = await response.blob()
-      const file = new File([blob], 'robot.jpg', { type: blob.type })
-      setFileData(file)
-      setSelectedRobotId(robotID)
-      // console.log('Robot chosen:', file)
-    } catch (error) {
-      console.error('Error fetching robot image:', error)
-    }
-  }
-
+const RobotCard = ({ robotID, robotName, isSelected, onSelect }) => {
   return (
     <div
-      onClick={handleRobotChoose}
-      className={`rounded-lg h-[250px] w-[200px] cursor-pointer overflow-hidden border-3 ${borderStyle} hover:border-white transition duration-300`}
+      className={`relative rounded-xl overflow-hidden cursor-pointer transition-all ${
+        isSelected ? 'ring-4 ring-[#9B7EBD]' : 'hover:ring-2 hover:ring-[#9B7EBD]/50'
+      }`}
+      onClick={() => onSelect(robotID)}
     >
       <img
-        className='w-full h-full object-cover rounded-lg'
         src={robotName}
-        alt='robot'
+        alt={`Robot Avatar ${robotID}`}
+        className="w-full h-full object-cover aspect-square"
       />
+      {isSelected && (
+        <div className="absolute inset-0 bg-[#9B7EBD]/30 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full bg-[#9B7EBD] flex items-center justify-center">
+            ✓
+          </div>
+        </div>
+      )}
     </div>
-  )
-}
+  );
+};
 
-export default RobotCard
+export default RobotCard;

@@ -1,13 +1,12 @@
-import axios from './AxiosInstance'
+import axios from './AxiosInstance';
 
-export const geminiQuery = async (userPrompt)=>{
-    await axios.post("/user/asktoassistant",{userPrompt})
-    .then((res)=>{
-        return res.data;
-    })
-    .catch((err)=>{
-        console.log("Error in fetching response from Gemini : "+err.response.data.message)
-        throw new Error("Error in server");
-        
-    })
-}
+export const geminiQuery = async (userPrompt) => {
+  try {
+    const res = await axios.post("/user/asktoassistant", { userPrompt });
+    console.log(res.data.type)
+    return res.data.response;
+  } catch (err) {
+    console.error("Error in fetching response from Gemini:", err.response?.data?.message || err.message);
+    throw new Error("Error in server");
+  }
+};
