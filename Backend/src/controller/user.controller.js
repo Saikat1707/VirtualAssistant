@@ -36,97 +36,143 @@ export const askToAssistant = async (req, res) => {
     const { userPrompt } = req.body;
     const user = req.user;
 
+    // Authentication and validation
     if (!user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    if (!userPrompt) {
-      return res.status(400).json({ message: "User prompt is required" });
+    if (!userPrompt || typeof userPrompt !== 'string') {
+      return res.status(400).json({ message: "Valid user prompt is required" });
     }
 
-    const result = await geminiResponse(userPrompt, user.virtualAssistantName, user.userName);
+    // Get structured response from Gemini
+    const result = await geminiResponse(
+      userPrompt,
+      user.virtualAssistantName,
+      user.userName
+    );
 
     if (!result) {
-      return res.status(500).json({ message: "Failed to get response from assistant" });
+      return res.status(500).json({ message: "Assistant service unavailable" });
     }
 
-    // Attempt to extract and clean JSON from result
-    const cleanedResult = result.trim().replace(/^```(?:json)?/, '').replace(/```$/, '').trim();
-
-    let GeminiResponse;
+    // Parse and clean the JSON response
+    let parsedResponse;
     try {
-      GeminiResponse = JSON.parse(cleanedResult);
+      const cleanedResult = result.trim()
+        .replace(/^```(?:json)?/, '')
+        .replace(/```$/, '')
+        .trim();
+      parsedResponse = JSON.parse(cleanedResult);
     } catch (err) {
-      return res.status(500).json({ message: "Invalid response format from assistant" });
+      console.error("Response parsing error:", err);
+      return res.status(500).json({ message: "Invalid assistant response format" });
     }
-    
-    const type = GeminiResponse.type || "unknown";
-    const userInput = GeminiResponse.userInput;
-    await User.findByIdAndUpdate(user._id, {
-      $push: { searchHistory: userInput }
-    });
 
-    switch (type) {
-      case "get_date":
-        return res.status(200).json({
-          type,
-          userInput: GeminiResponse.userInput,
-          response: moment().format('MMMM Do YYYY')
-        });
+    // Destructure with defaults
+    console.log("parsed Response : ")
+    console.log(parsedResponse)
+    const {
+      type = "unknown",
+      userInput = userPrompt,
+      response = "Sorry, I couldn't understand that.",
+      appName = null,
+      search_query = null
+    } = parsedResponse;
 
-      case "get_time":
-        return res.status(200).json({
-          type,
-          userInput: GeminiResponse.userInput,
-          response: moment().format('h:mm:ss a')
-        });
+    try {
+      await User.findByIdAndUpdate(user._id, {
+        $push: { 
+          searchHistory: userInput
+        }
+      });
+    } catch (dbError) {
+      console.error("History save error:", dbError);
+    }
 
-      case "get_day":
-        return res.status(200).json({
-          type,
-          userInput: GeminiResponse.userInput,
-          response: moment().format('dddd')
-        });
+    // Handle date/time intents
+    const timeIntents = {
+      get_date: moment().format('MMMM Do YYYY'),
+      get_time: moment().format('h:mm:ss a'),
+      get_day: moment().format('dddd'),
+      get_month: moment().format('MMMM'),
+      get_year: moment().format('YYYY')
+    };
 
-      case "get_month":
-        return res.status(200).json({
-          type,
-          userInput: GeminiResponse.userInput,
-          response: moment().format('MMMM')
-        });
+    if (timeIntents[type]) {
+      return res.status(200).json({
+        type,
+        userInput,
+        response: timeIntents[type]
+      });
+    }
 
-      case "get_year":
-        return res.status(200).json({
-          type,
-          userInput: GeminiResponse.userInput,
-          response: moment().format('YYYY')
-        });
-
-      case "google_search":
-      case "youtube_search":
-      case "general":
-      case "youtube_play":
-      case "calculator_open":
-      case "instagram_open":
-      case "facebook_open":
-      case "twitter_open":
-      case "weather_show":
-      case "code":
-        return res.status(200).json({
-          type,
-          userInput: GeminiResponse.userInput,
-          response: GeminiResponse.response
-        });
-
-      default:
+    // const appName2 = parsedResponse['appName?'] || null;
+    // console.log("app Name is : ",appName2)
+    // Handle app opening
+    if (type === "app_open") {
+      if (!appName) {
         return res.status(200).json({
           type: "unknown",
-          userInput: GeminiResponse.userInput || userPrompt,
-          response: "Sorry, I didn't understand that."
+          userInput,
+          response: "Please specify an app to open"
         });
+      }
+      return res.status(200).json({
+        type,
+        userInput,
+        response: `Opening ${appName}`,
+        appName: appName.toLowerCase()
+      });
     }
+
+    // const search_query2 = parsedResponse['search_query?'] || null;
+    // const appName3 = parsedResponse['appName?'] || null;
+    // Handle search commands
+    if (type === "search_command") {
+      if (!search_query|| !appName) {
+        return res.status(200).json({
+          type: "unknown",
+          userInput,
+          response: "Please specify both search terms and platform"
+        });
+      }
+      return res.status(200).json({
+        type,
+        userInput,
+        response: `Searching for "${search_query}" on ${appName}`,
+        appName: appName.toLowerCase(),
+        search_query
+      });
+    }
+
+    // Handle other supported intents
+    const supportedIntents = [
+      "code",
+      "task_command",
+      "general"
+    ];
+
+    if (supportedIntents.includes(type)) {
+      return res.status(200).json({
+        type,
+        userInput,
+        response
+      });
+    }
+
+    // Fallback for unknown intents
+    return res.status(200).json({
+      type: "unknown",
+      userInput,
+      response
+    });
+
   } catch (error) {
-    console.error("Error in askToAssistant:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    console.error("Assistant error:", error);
+    return res.status(500).json({ 
+      message: "Internal server error",
+      error: error.message 
+    });
   }
 };

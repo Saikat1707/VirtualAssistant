@@ -79,7 +79,7 @@ const Customization = () => {
           {/* Footer Navigation */}
           <div className="px-6 pb-6 md:px-8 md:pb-8 flex justify-between border-t border-[#333]/50 pt-6">
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/')}
               className="px-6 py-2 rounded-lg bg-[#333]/80 hover:bg-[#444] transition-colors"
             >
               Back to Dashboard

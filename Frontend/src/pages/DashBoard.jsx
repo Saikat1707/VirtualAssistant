@@ -13,15 +13,8 @@ const DashBoard = () => {
   const [showHistory, setShowHistory] = useState(false);
   const [geminiResponse, setGeminiResponse] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
-  const historyRef = useRef(null);
   const { transcript, resetTranscript, listening, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
-  // Auto-scroll to bottom of history when new items are added
-  useEffect(() => {
-    if (historyRef.current) {
-      historyRef.current.scrollTop = historyRef.current.scrollHeight;
-    }
-  }, [user?.searchHistory]);
 
   // Initialize speech recognition
   useEffect(() => {
@@ -81,10 +74,17 @@ const DashBoard = () => {
   const processQuery = async (query) => {
     setIsProcessing(true);
     try {
-      const result = await geminiQuery(query);
-      speak(result);
-      setGeminiResponse(result);
-      await fetchUser(); // Refresh user data to update history
+      const { response, actionUrl} = await geminiQuery(query);
+
+      speak(response);
+      setGeminiResponse(response);
+
+      if (actionUrl) {
+        window.open(actionUrl)
+      }
+
+      resetTranscript();
+      await fetchUser();
     } catch (error) {
       console.error("Gemini query error:", error);
       speak("Sorry, I encountered an error. Please try again.");
@@ -117,7 +117,7 @@ const DashBoard = () => {
         toast.info("Microphone muted");
       } else {
         await SpeechRecognition.startListening({ continuous: true, language: 'en-IN' });
-        await SpeechRecognition.resetTranscript
+        resetTranscript()
         toast.info("Microphone active");
       }
     } catch (error) {
@@ -125,6 +125,10 @@ const DashBoard = () => {
       toast.error("Failed to toggle microphone");
     }
   };
+
+  const handleReset = ()=>{
+    resetTranscript()
+  }
 
   if (!isLogin || !user) {
     return (
@@ -169,8 +173,7 @@ const DashBoard = () => {
           )}
         </div>
         
-        <div 
-          ref={historyRef}
+        <div
           className="h-[calc(100%-50px)] overflow-y-auto scrollbar-thin scrollbar-thumb-[#9B7EBD] scrollbar-track-[#2a2a2a] pr-2"
         >
           {searchHistory && searchHistory.length > 0 ? (
@@ -204,6 +207,12 @@ const DashBoard = () => {
         {/* Top Right Buttons */}
         <div className="absolute top-4 right-4 md:top-6 md:right-6 flex flex-col md:flex-row items-end gap-3 z-30">
           <button 
+            onClick={handleReset} 
+            className="bg-[#121114] border hover:bg-[#403f41] text-white font-medium py-2 px-4 rounded-xl shadow-lg transition duration-200 ease-in-out transform hover:scale-105 active:scale-95 text-sm md:text-base"
+          >
+            Reset Command
+          </button>
+          <button 
             onClick={handleCustomize} 
             className="bg-[#9B7EBD] hover:bg-[#bca3d6] text-white font-medium py-2 px-4 rounded-xl shadow-lg transition duration-200 ease-in-out transform hover:scale-105 active:scale-95 text-sm md:text-base"
           >
@@ -215,6 +224,7 @@ const DashBoard = () => {
           >
             Logout
           </button>
+          
         </div>
 
         {/* Assistant Section */}
