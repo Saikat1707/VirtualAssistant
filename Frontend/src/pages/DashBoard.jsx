@@ -15,7 +15,9 @@ const DashBoard = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { transcript, resetTranscript, listening, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
-
+  if(!isLogin){
+    navigate('/auth/login')
+  }
   // Initialize speech recognition
   useEffect(() => {
     if (!browserSupportsSpeechRecognition) {
