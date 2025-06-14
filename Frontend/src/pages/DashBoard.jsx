@@ -17,11 +17,11 @@ const DashBoard = () => {
 
   const [loading, setLoading] = useState(true);
 
-useEffect(() => {
-  const fetch = async () => {
-    try {
-      await fetchUser();
-    } catch (err) {
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        await fetchUser();
+      } catch (err) {
         console.error("Error fetching user:", err);
       } finally {
         setLoading(false);
@@ -30,7 +30,7 @@ useEffect(() => {
     fetch();
   }, []);
 
-  // Redirect only after loading is complete
+  // Redirect if not logged in (after loading is complete)
   useEffect(() => {
     if (!loading && isLogin === false) {
       navigate('/auth/login');
@@ -38,8 +38,9 @@ useEffect(() => {
   }, [loading, isLogin, navigate]);
 
   if (loading) {
-    return <div className="text-white">Loading...</div>; // or a spinner
+    return <div className="text-white">Loading...</div>; // or a loading spinner
   }
+
 
   // Your component JSX here
 
