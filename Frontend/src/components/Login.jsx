@@ -17,6 +17,7 @@ const Login = () => {
     const autoRedirect = async () => {
       try {
         await fetchUser();
+        console.log("Working in fetchUser")
         if (isLoggedIn) {
           navigate('/');
         }
