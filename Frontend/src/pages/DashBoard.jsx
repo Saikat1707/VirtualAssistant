@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useUserContext } from '../context/UserContext';
 import { Menu, Mic, MicOff, Loader2 } from 'lucide-react';
 import axios from '../service/AxiosInstance';
@@ -11,55 +11,62 @@ const DashBoard = () => {
   const navigate = useNavigate();
   const { user, isLogin, speak, fetchUser } = useUserContext();
   const [showHistory, setShowHistory] = useState(false);
-  const [geminiResponse, setGeminiResponse] = useState("");
+  const [geminiResponse, setGeminiResponse] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const { transcript, resetTranscript, listening, browserSupportsSpeechRecognition } = useSpeechRecognition();
-  
-  useEffect(async () => {
-    await fetchUser()
-  }, [])
-  
-  if(!isLogin){
-    navigate('/auth/login')
-  }
+
+  // Ensure user is fetched on initial load
+  useEffect(() => {
+    const fetch = async () => {
+      try {
+        await fetchUser();
+      } catch (err) {
+        console.error("Error fetching user:", err);
+      }
+    };
+    fetch();
+  }, [fetchUser]);
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (isLogin === false) {
+      navigate('/auth/login');
+    }
+  }, [isLogin, navigate]);
+
+  // Start voice recognition if supported
   useEffect(() => {
     if (!browserSupportsSpeechRecognition) {
       toast.error("Your browser does not support speech recognition.");
       return;
     }
-    
+
     const startListening = async () => {
       try {
-        await SpeechRecognition.startListening({ 
-          continuous: true, 
-          language: 'en-IN'
+        await SpeechRecognition.startListening({
+          continuous: true,
+          language: 'en-IN',
         });
       } catch (error) {
-        console.error("Error starting speech recognition:", error);
+        console.error("Speech start error:", error);
         toast.error("Failed to start voice recognition");
       }
     };
-    
+
     startListening();
-    
+
     return () => {
       SpeechRecognition.stopListening();
     };
   }, [browserSupportsSpeechRecognition]);
 
-  // Handle voice commands
+  // Detect wake words and process query
   useEffect(() => {
     if (!transcript || !user?.virtualAssistantName || isProcessing) return;
 
-    const wakeWords = [
-      `hey ${user.virtualAssistantName.toLowerCase()}`, 
-      `${user.virtualAssistantName.toLowerCase()}`
-    ];
-    
-    const saidWakeWord = wakeWords.some(word => 
-      transcript.toLowerCase().includes(word)
-    );
+    const wakeWords = [`hey ${user.virtualAssistantName.toLowerCase()}`, `${user.virtualAssistantName.toLowerCase()}`];
 
+    const saidWakeWord = wakeWords.some(word => transcript.toLowerCase().includes(word));
     if (saidWakeWord) {
       const query = transcript
         .toLowerCase()
@@ -79,21 +86,15 @@ const DashBoard = () => {
   const processQuery = async (query) => {
     setIsProcessing(true);
     try {
-      const { response, actionUrl} = await geminiQuery(query);
-
+      const { response, actionUrl } = await geminiQuery(query);
       speak(response);
       setGeminiResponse(response);
-
-      if (actionUrl) {
-        window.open(actionUrl)
-      }
-
-      resetTranscript();
+      if (actionUrl) window.open(actionUrl);
       await fetchUser();
     } catch (error) {
-      console.error("Gemini query error:", error);
+      console.error("Gemini error:", error);
       speak("Sorry, I encountered an error. Please try again.");
-      toast.error(error.message);
+      toast.error(error.message || "Something went wrong");
     } finally {
       setIsProcessing(false);
       resetTranscript();
@@ -106,14 +107,12 @@ const DashBoard = () => {
       toast.success("Logged out successfully");
       navigate('/auth/login');
     } catch (err) {
+      console.error("Logout error:", err);
       toast.error("Failed to log out");
-      console.error(err);
     }
   };
 
-  const handleCustomize = () => {
-    navigate('/customization/dummy');
-  };
+  const handleCustomize = () => navigate('/customization/dummy');
 
   const toggleListening = async () => {
     try {
@@ -122,18 +121,16 @@ const DashBoard = () => {
         toast.info("Microphone muted");
       } else {
         await SpeechRecognition.startListening({ continuous: true, language: 'en-IN' });
-        resetTranscript()
+        resetTranscript();
         toast.info("Microphone active");
       }
     } catch (error) {
-      console.error("Error toggling microphone:", error);
+      console.error("Toggle mic error:", error);
       toast.error("Failed to toggle microphone");
     }
   };
 
-  const handleReset = ()=>{
-    resetTranscript()
-  }
+  const handleReset = () => resetTranscript();
 
   if (!isLogin || !user) {
     return (
@@ -150,8 +147,7 @@ const DashBoard = () => {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-[#171717] via-[#131116] to-[#c272fb] text-white font-sans flex flex-col md:flex-row relative overflow-hidden">
-      
-      {/* Mobile Menu Toggle */}
+      {/* Menu button for mobile */}
       <button
         className="md:hidden fixed top-4 left-4 z-50 bg-[#2a2a2a]/90 p-2 rounded-md shadow-lg backdrop-blur-sm"
         onClick={() => setShowHistory(prev => !prev)}
@@ -160,33 +156,25 @@ const DashBoard = () => {
         <Menu className="text-white w-6 h-6" />
       </button>
 
-      {/* Sidebar - Search History */}
-      <aside
-        className={`bg-[#1f1f1f]/95 backdrop-blur-sm md:backdrop-blur-none md:bg-[#1f1f1f] text-white p-6 overflow-y-auto transition-all duration-300 z-40 
-          ${showHistory ? 'fixed inset-0 w-full h-screen' : 'hidden'} 
-          md:block md:static md:w-1/4 md:h-screen`}
+      {/* Sidebar */}
+      <aside className={`bg-[#1f1f1f]/95 md:bg-[#1f1f1f] text-white p-6 transition-all duration-300 z-40 
+        ${showHistory ? 'fixed inset-0 w-full h-screen' : 'hidden'} md:block md:static md:w-1/4 md:h-screen`}
       >
         <div className="flex justify-between items-center mb-4 border-b border-gray-700 pb-2">
           <h2 className="text-xl font-bold">Search History</h2>
           {showHistory && (
-            <button 
-              onClick={() => setShowHistory(false)}
-              className="md:hidden text-gray-400 hover:text-white"
-            >
+            <button onClick={() => setShowHistory(false)} className="md:hidden text-gray-400 hover:text-white">
               ✕
             </button>
           )}
         </div>
-        
-        <div
-          className="h-[calc(100%-50px)] overflow-y-auto scrollbar-thin scrollbar-thumb-[#9B7EBD] scrollbar-track-[#2a2a2a] pr-2"
-        >
+        <div className="h-[calc(100%-50px)] overflow-y-auto scrollbar-thin scrollbar-thumb-[#9B7EBD] scrollbar-track-[#2a2a2a] pr-2">
           {searchHistory && searchHistory.length > 0 ? (
             <ul className="space-y-2">
               {[...searchHistory].reverse().map((item, index) => (
                 <li
                   key={index}
-                  className="bg-[#2a2a2a]/60 hover:bg-[#3a3a3a]/80 rounded-lg p-3 transition-all cursor-pointer backdrop-blur-sm md:backdrop-blur-none"
+                  className="bg-[#2a2a2a]/60 hover:bg-[#3a3a3a]/80 rounded-lg p-3 cursor-pointer"
                   onClick={() => {
                     setGeminiResponse(item.response || item);
                     setShowHistory(false);
@@ -208,49 +196,34 @@ const DashBoard = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="w-full md:w-3/4 flex flex-col items-center justify-start p-4 md:p-8 min-h-screen relative">
-        {/* Top Right Buttons */}
-        <div className="absolute top-4 right-4 md:top-6 md:right-6 flex flex-col md:flex-row items-end gap-3 z-30">
-          <button 
-            onClick={handleReset} 
-            className="bg-[#121114] border hover:bg-[#403f41] text-white font-medium py-2 px-4 rounded-xl shadow-lg transition duration-200 ease-in-out transform hover:scale-105 active:scale-95 text-sm md:text-base"
-          >
+      <main className="w-full md:w-3/4 flex flex-col items-center justify-start p-4 md:p-8 relative min-h-screen">
+        <div className="absolute top-4 right-4 flex flex-col md:flex-row items-end gap-3 z-30">
+          <button onClick={handleReset} className="bg-[#121114] hover:bg-[#403f41] text-white py-2 px-4 rounded-xl text-sm md:text-base">
             Reset Command
           </button>
-          <button 
-            onClick={handleCustomize} 
-            className="bg-[#9B7EBD] hover:bg-[#bca3d6] text-white font-medium py-2 px-4 rounded-xl shadow-lg transition duration-200 ease-in-out transform hover:scale-105 active:scale-95 text-sm md:text-base"
-          >
+          <button onClick={handleCustomize} className="bg-[#9B7EBD] hover:bg-[#bca3d6] text-white py-2 px-4 rounded-xl text-sm md:text-base">
             Customize
           </button>
-          <button 
-            onClick={handleLogOut} 
-            className="bg-[#D93636]/90 hover:bg-[#f75e5e] text-white font-medium py-2 px-4 rounded-xl shadow-lg transition duration-200 ease-in-out transform hover:scale-105 active:scale-95 text-sm md:text-base"
-          >
+          <button onClick={handleLogOut} className="bg-[#D93636]/90 hover:bg-[#f75e5e] text-white py-2 px-4 rounded-xl text-sm md:text-base">
             Logout
           </button>
-          
         </div>
 
-        {/* Assistant Section */}
         <div className="w-full max-w-3xl flex flex-col items-center mt-16 md:mt-24 px-4">
-          {/* Assistant Avatar */}
           <div className="relative group">
             {virtualAssistantImage ? (
               <img
                 src={virtualAssistantImage}
                 alt="Assistant"
-                className="w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover mx-auto shadow-xl border-4 border-[#EEEEEE]/50 group-hover:border-[#D4BEE4] transition-all duration-300"
+                className="w-28 h-28 sm:w-36 sm:h-36 rounded-full object-cover shadow-xl border-4 border-[#EEEEEE]/50 group-hover:border-[#D4BEE4]"
               />
             ) : (
               <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full bg-[#2a2a2a] flex items-center justify-center shadow-xl border-4 border-[#EEEEEE]/50">
                 <span className="text-4xl">🤖</span>
               </div>
             )}
-            
-            {/* Mic Status Badge */}
-            <div 
-              className={`absolute -bottom-2 -right-2 rounded-full p-2 shadow-md transition-all duration-300 flex items-center justify-center ${
+            <div
+              className={`absolute -bottom-2 -right-2 rounded-full p-2 shadow-md ${
                 listening ? 'bg-green-500/90' : 'bg-red-500/90'
               } ${isProcessing ? 'animate-pulse' : ''}`}
               onClick={toggleListening}
@@ -266,7 +239,6 @@ const DashBoard = () => {
             </div>
           </div>
 
-          {/* Greeting */}
           <div className="text-center mt-6">
             <h1 className="text-2xl sm:text-3xl font-bold">
               Hello, I'm <span className="text-[#D4BEE4]">{virtualAssistantName}</span> 👋
@@ -276,42 +248,34 @@ const DashBoard = () => {
             </p>
           </div>
 
-          {/* Wake Word Hint */}
-          <div className="mt-4 bg-[#2a2a2a]/50 backdrop-blur-sm px-4 py-2 rounded-lg border border-[#3a3a3a]">
-            <p className="text-sm text-center text-[#f096db]">
-              First Your Query then Say: <span className="font-medium italic">"Hey {virtualAssistantName} or {virtualAssistantName}"</span> to activate
+          <div className="mt-4 bg-[#2a2a2a]/50 px-4 py-2 rounded-lg border border-[#3a3a3a]">
+            <p className="text-sm text-[#f096db] text-center">
+              First your query, then say <span className="italic">"Hey {virtualAssistantName}"</span> to activate
             </p>
           </div>
 
-          {/* Status Indicator */}
-          <div className="mt-4 flex items-center justify-center gap-2">
-            <div className={`h-3 w-3 rounded-full ${
-              listening ? 'bg-green-400' : 'bg-gray-500'
-            } ${isProcessing ? 'animate-pulse' : ''}`}></div>
+          <div className="mt-4 flex items-center gap-2">
+            <div className={`h-3 w-3 rounded-full ${listening ? 'bg-green-400' : 'bg-gray-500'} ${isProcessing ? 'animate-pulse' : ''}`}></div>
             <span className="text-xs text-gray-300">
               {isProcessing ? 'Processing...' : listening ? 'Listening...' : 'Not Listening'}
             </span>
           </div>
         </div>
 
-        {/* Response Section */}
-        <div className="w-full max-w-3xl mt-8 mb-16 px-4">
-          {geminiResponse && (
-            <div className="bg-[#1e1e1e]/90 backdrop-blur-sm border border-[#333]/50 rounded-xl shadow-lg overflow-hidden transition-all duration-300">
+        {geminiResponse && (
+          <div className="w-full max-w-3xl mt-8 mb-16 px-4">
+            <div className="bg-[#1e1e1e]/90 border border-[#333]/50 rounded-xl shadow-lg">
               <div className="bg-[#2a2a2a] px-4 py-3 border-b border-[#333]/50 flex items-center">
                 <div className="h-2 w-2 rounded-full bg-[#9B7EBD] mr-2"></div>
-                <h4 className="font-medium text-[#D4BEE4]">Assistant Response</h4>
+                <h4 className="text-[#D4BEE4] font-medium">Assistant Response</h4>
               </div>
-              <div className="p-4">
-                <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                  {geminiResponse}
-                </p>
+              <div className="p-4 text-sm whitespace-pre-wrap leading-relaxed">
+                {geminiResponse}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Current Transcript (for debugging) */}
         {transcript && (
           <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-xs p-2 rounded-lg max-w-xs truncate text-center">
             Heard: "{transcript}"
