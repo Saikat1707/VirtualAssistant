@@ -36,9 +36,6 @@ const DashBoard = () => {
       navigate('/auth/login');
     }
   }, [loading, isLogin, navigate]);
-
-
-  // Start voice recognition if supported
   useEffect(() => {
     if (!browserSupportsSpeechRecognition) {
       toast.error("Your browser does not support speech recognition.");
@@ -138,7 +135,7 @@ const DashBoard = () => {
 
   if (!isLogin || !user) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-[#171717] via-[#131116] to-[#c272fb] text-white">
+      <div className="flex w-screen items-center justify-center h-screen bg-gradient-to-br from-[#171717] via-[#131116] to-[#c272fb] text-white">
         <div className="animate-pulse flex items-center gap-2">
           <Loader2 className="animate-spin" />
           Loading user data...
