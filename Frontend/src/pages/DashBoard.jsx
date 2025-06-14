@@ -37,12 +37,6 @@ const DashBoard = () => {
     }
   }, [loading, isLogin, navigate]);
 
-  if (loading) {
-    return <div className="text-white">Loading...</div>; // or a loading spinner
-  }
-
-
-  // Your component JSX here
 
   // Start voice recognition if supported
   useEffect(() => {
