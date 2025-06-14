@@ -22,7 +22,6 @@ const Login = () => {
       ...prev,
       [name]: value
     }));
-    // Clear error when user types
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -52,7 +51,7 @@ const Login = () => {
 
     setIsSubmitting(true);
     try {
-      const response = await axios.post("/auth/login", formData);
+      await axios.post("/auth/login", formData);
       toast.success("Login successful!");
       await fetchUser();
       

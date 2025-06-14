@@ -14,11 +14,14 @@ const DashBoard = () => {
   const [geminiResponse, setGeminiResponse] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const { transcript, resetTranscript, listening, browserSupportsSpeechRecognition } = useSpeechRecognition();
-
+  
+  useEffect(async () => {
+    await fetchUser()
+  }, [])
+  
   if(!isLogin){
     navigate('/auth/login')
   }
-  // Initialize speech recognition
   useEffect(() => {
     if (!browserSupportsSpeechRecognition) {
       toast.error("Your browser does not support speech recognition.");
