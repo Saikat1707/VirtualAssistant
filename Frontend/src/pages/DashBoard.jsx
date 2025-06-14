@@ -25,7 +25,7 @@ const DashBoard = () => {
       }
     };
     fetch();
-  }, [fetchUser]);
+  }, []);
 
   // Redirect if not logged in
   useEffect(() => {
