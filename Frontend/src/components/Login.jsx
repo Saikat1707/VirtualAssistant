@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import axios from '../service/AxiosInstance';
 import { Link, useNavigate } from 'react-router-dom';
@@ -8,25 +8,30 @@ import { FiLogIn, FiMail, FiLock, FiLoader } from 'react-icons/fi';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { isHaveAssistant, fetchUser } = useUserContext();
-  const [formData, setFormData] = useState({
-    email: "",
-    password: ""
-  });
+  const { isHaveAssistant, fetchUser, isLoggedIn } = useUserContext();
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    const autoRedirect = async () => {
+      try {
+        await fetchUser();
+        if (isLoggedIn) {
+          navigate('/');
+        }
+      } catch (error) {
+        console.error("Auto-login check failed", error);
+      }
+    };
+    autoRedirect();
+  }, [fetchUser, isLoggedIn, navigate]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: null
-      }));
+      setErrors(prev => ({ ...prev, [name]: null }));
     }
   };
 
@@ -40,7 +45,6 @@ const Login = () => {
     if (!formData.password) {
       newErrors.password = "Password is required";
     }
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -54,7 +58,7 @@ const Login = () => {
       await axios.post("/auth/login", formData);
       toast.success("Login successful!");
       await fetchUser();
-      
+
       if (isHaveAssistant) {
         toast.info("Redirecting to dashboard...");
         navigate("/");
@@ -62,7 +66,6 @@ const Login = () => {
         navigate("/customization/dummy");
       }
     } catch (err) {
-      console.error(err);
       const errorMsg = err.response?.data?.message || "Login failed. Please try again.";
       toast.error(errorMsg);
     } finally {
@@ -73,13 +76,13 @@ const Login = () => {
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
-      transition: { 
+      transition: {
         staggerChildren: 0.1,
-        when: "beforeChildren"
-      }
-    }
+        when: "beforeChildren",
+      },
+    },
   };
 
   const itemVariants = {
@@ -87,26 +90,23 @@ const Login = () => {
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring", stiffness: 100 }
-    }
+      transition: { type: "spring", stiffness: 100 },
+    },
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 md:p-10 font-poppins bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]">
-      <motion.div 
+      <motion.div
         initial="hidden"
         animate="visible"
         variants={containerVariants}
         className="w-full max-w-md"
       >
-        <motion.div 
+        <motion.div
           variants={itemVariants}
           className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl px-6 py-8 md:px-10 md:py-12"
         >
-          <motion.div 
-            variants={itemVariants}
-            className="text-center mb-8"
-          >
+          <motion.div variants={itemVariants} className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <div className="p-3 bg-[#9B7EBD]/20 rounded-full">
                 <FiLogIn className="text-3xl text-[#9B7EBD]" />
@@ -121,7 +121,6 @@ const Login = () => {
           </motion.div>
 
           <form className="space-y-5" onSubmit={handleFormSubmit}>
-            {/* Email */}
             <motion.div variants={itemVariants}>
               <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
                 Email Address
@@ -147,14 +146,13 @@ const Login = () => {
               </div>
             </motion.div>
 
-            {/* Password */}
             <motion.div variants={itemVariants}>
               <div className="flex items-center justify-between mb-2">
                 <label htmlFor="password" className="block text-sm font-medium text-white">
                   Password
                 </label>
-                <Link 
-                  to="/auth/forgot-password" 
+                <Link
+                  to="/auth/forgot-password"
                   className="text-xs text-[#B89DE0] hover:underline"
                 >
                   Forgot password?
@@ -181,7 +179,6 @@ const Login = () => {
               </div>
             </motion.div>
 
-            {/* Submit Button */}
             <motion.div variants={itemVariants} className="pt-2">
               <button
                 type="submit"
@@ -198,14 +195,12 @@ const Login = () => {
             </motion.div>
           </form>
 
-          {/* Divider */}
           <motion.div variants={itemVariants} className="flex items-center my-6">
             <div className="flex-grow border-t border-white/20"></div>
             <span className="flex-shrink mx-4 text-white/50 text-sm">OR</span>
             <div className="flex-grow border-t border-white/20"></div>
           </motion.div>
 
-          {/* Sign Up Link */}
           <motion.div variants={itemVariants} className="text-center">
             <p className="text-sm text-white/70">
               Don't have an account?{' '}
