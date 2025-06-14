@@ -9,7 +9,7 @@ import cors from 'cors'
 import { geminiResponse } from './src/service/GeminiRespose.js'
 
 const corsOptions = {
-  origin: "http://localhost:5173",
+  origin: "https://virtual-assistant-one-ashy.vercel.app",
   credentials: true
 }
 
@@ -17,7 +17,6 @@ const app = express()
 app.use(cookieParser())
 
 app.use(cors(corsOptions));
-// app.options('/*', cors(corsOptions)); 
 
 
 app.use(express.json())
