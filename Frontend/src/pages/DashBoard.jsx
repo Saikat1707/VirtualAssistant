@@ -15,24 +15,33 @@ const DashBoard = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { transcript, resetTranscript, listening, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
-  // Ensure user is fetched on initial load
-  useEffect(() => {
-    const fetch = async () => {
-      try {
-        await fetchUser();
-      } catch (err) {
+  const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  const fetch = async () => {
+    try {
+      await fetchUser();
+    } catch (err) {
         console.error("Error fetching user:", err);
+      } finally {
+        setLoading(false);
       }
     };
     fetch();
   }, []);
 
-  // Redirect if not logged in
+  // Redirect only after loading is complete
   useEffect(() => {
-    if (isLogin === false) {
+    if (!loading && isLogin === false) {
       navigate('/auth/login');
     }
-  }, [isLogin, navigate]);
+  }, [loading, isLogin, navigate]);
+
+  if (loading) {
+    return <div className="text-white">Loading...</div>; // or a spinner
+  }
+
+  // Your component JSX here
 
   // Start voice recognition if supported
   useEffect(() => {
